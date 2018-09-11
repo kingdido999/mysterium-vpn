@@ -153,6 +153,7 @@ class MysteriumVpn {
         this._bugReporter.captureErrorException(e)
       }
     })
+
     // fired when all windows are closed
     app.on('window-all-closed', () => this.onWindowsClosed())
     // fired just before quitting, this should quit
@@ -289,7 +290,7 @@ class MysteriumVpn {
   // if the installation fails, it sends a message to the renderer window
   async _ensureDaemonInstallation () {
     if (await this._installer.needsInstallation()) {
-      logInfo("Installing 'mysterium_client' process")
+      logInfo('Installing \'mysterium_client\' process')
       try {
         await this._installer.install()
       } catch (e) {
@@ -298,7 +299,7 @@ class MysteriumVpn {
           messageForUser = translations.processInstallationPermissionsError
         }
         this._communication.sendRendererShowErrorMessage(messageForUser)
-        throw new Error("Failed to install 'mysterium_client' process. " + e)
+        throw new Error('Failed to install \'mysterium_client\' process. ' + e)
       }
     }
   }
@@ -345,7 +346,7 @@ class MysteriumVpn {
     try {
       await this._process.stop()
     } catch (e) {
-      logException("Failed to stop 'mysterium_client' process", e)
+      logException('Failed to stop \'mysterium_client\' process', e)
       this._bugReporter.captureErrorException(e)
     }
   }
@@ -399,7 +400,7 @@ class MysteriumVpn {
       this._mysteriumProcessLogCache.pushToLevel(level, data)
     }
 
-    logInfo("Starting 'mysterium_client' process")
+    logInfo('Starting \'mysterium_client\' process')
     try {
       await this._process.start()
       logInfo('mysterium_client start successful')
@@ -419,23 +420,23 @@ class MysteriumVpn {
 
   _startProcessMonitoring () {
     this._monitoring.onStatusUp(() => {
-      logInfo("'mysterium_client' is up")
+      logInfo('\'mysterium_client\' is up')
       this._communication.sendMysteriumClientUp()
       this._bugReporterMetrics.set(METRICS.CLIENT_RUNNING, true)
     })
     this._monitoring.onStatusDown(() => {
-      logInfo("'mysterium_client' is down")
+      logInfo('\'mysterium_client\' is down')
       this._communication.sendMysteriumClientDown()
       this._bugReporterMetrics.set(METRICS.CLIENT_RUNNING, false)
     })
     this._monitoring.onStatus(status => {
       if (status === false) {
-        logInfo("Starting 'mysterium_client' process, because it's currently down")
+        logInfo('Starting \'mysterium_client\' process, because it\'s currently down')
         this._repairProcess()
       }
     })
 
-    logInfo("Starting 'mysterium_client' monitoring")
+    logInfo('Starting \'mysterium_client\' monitoring')
     this._monitoring.start()
   }
 
@@ -460,7 +461,7 @@ class MysteriumVpn {
         if (this._monitoring.isStarted) {
           this._communication.sendRendererShowErrorMessage(translations.processStartError)
         }
-        logException("Failed to start 'mysterium_client' process", err)
+        logException('Failed to start \'mysterium_client\' process', err)
       })
   }
 
