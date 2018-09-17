@@ -69,6 +69,7 @@ module.exports = config => {
     },
     frameworks: ['mocha', 'chai'],
     files: [
+      '../../node_modules/babel-polyfill/dist/polyfill.js',
       '../../test/unit/index.js'
     ],
     preprocessors: {
