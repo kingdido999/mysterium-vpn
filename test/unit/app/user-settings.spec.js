@@ -36,6 +36,7 @@ describe('UserSettingsStore', () => {
       const userSettingsStore = new UserSettingsStore(saveSettingsPath)
       userSettingsStore.setShowDisconnectNotifications(false)
       userSettingsStore.setFavorite('id_123', true)
+
       await userSettingsStore.save()
       const data = readFileSync(saveSettingsPath, { encoding: 'utf8' })
 

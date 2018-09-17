@@ -1,55 +1,58 @@
 {
   "presets": [
-    "stage-0",
-    "flow"
+    "@babel/preset-env",
+    "@babel/preset-flow"
   ],
   "comments": false,
   "env": {
     "test": {
       "presets": [
-        ["env", {
-          "targets": { "node": 7 }
-        }],
-        "stage-0"
+        ["@babel/preset-env", {
+          "targets": { "node": 7 },
+          "useBuiltIns": "usage"
+        }]
       ],
-      "plugins": ["istanbul"]
+      "plugins": [
+        "istanbul"
+      ]
     },
     "main": {
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "targets": { "node": 7 }
-        }],
-        "stage-0"
+        }]
       ]
     },
     "renderer": {
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "modules": false
-        }],
-        "stage-0"
+        }]
       ],
       "plugins": [
         ["babel-plugin-transform-builtin-extend", {
           "globals": ["Error"]
         }],
-        "transform-runtime"
+        "@babel/plugin-transform-runtime"
       ]
     },
     "web": {
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "modules": false
-        }],
-        "stage-0"
+        }]
       ],
       "plugins": [
         ["babel-plugin-transform-builtin-extend", {
           "globals": ["Error"]
         }],
-        "transform-runtime"
+        "@babel/plugin-transform-runtime"
       ]
     }
   },
-  "plugins": ["transform-runtime"]
+  "plugins": [
+    "@babel/plugin-transform-runtime",
+    "@babel/plugin-transform-property-mutators",
+    "@babel/plugin-proposal-class-properties"
+  ]
 }
