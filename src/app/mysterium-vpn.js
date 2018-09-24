@@ -345,7 +345,7 @@ class MysteriumVpn {
     return true
   }
 
-  async _acceptTerms () {
+  async _acceptTerms (): Promise<boolean> {
     this._communication.sendTermsRequest({
       htmlContent: this._terms.getContent()
     })
