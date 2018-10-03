@@ -17,10 +17,8 @@
 
 // @flow
 import { BrowserWindow } from 'electron'
-import type { Installer, Process } from '../libraries/mysterium-client'
 import TequilapiRegistrationFetcher from './data-fetchers/tequilapi-registration-fetcher'
 import type { EnvironmentCollector } from './bug-reporting/environment/environment-collector'
-import ProcessMonitoring from '../libraries/mysterium-client/monitoring'
 import { UserSettingsStorage } from './user-settings/user-settings-storage'
 import MainBufferedIpc from './communication/ipc/main-buffered-ipc'
 import Terms from './terms'
@@ -37,6 +35,7 @@ import Notification from './notification'
 import StartupEventTracker from './statistics/startup-event-tracker'
 import type { StringLogger } from './logging/string-logger'
 import CommunicationBindings from './communication-bindings'
+import ProcessManager from './mysterium-client/process-manager'
 import type { MainCommunication } from './communication/main-communication'
 
 export type MysteriumVpnParams = {
@@ -44,9 +43,7 @@ export type MysteriumVpnParams = {
   windowFactory: () => Window,
   config: MysteriumVpnConfig,
   terms: Terms,
-  installer: Installer,
-  monitoring: ProcessMonitoring,
-  process: Process,
+  processManager: ProcessManager,
   proposalFetcher: TequilapiProposalFetcher,
   registrationFetcher: TequilapiRegistrationFetcher,
   countryList: CountryList,
