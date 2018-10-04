@@ -29,7 +29,6 @@ import type { MysteriumVpnConfig } from './mysterium-vpn-config'
 import Window from './window'
 import SyncCallbacksInitializer from './sync-callbacks-initializer'
 import { BugReporterMetrics } from './bug-reporting/metrics/bug-reporter-metrics'
-import FeatureToggle from './features/feature-toggle'
 import type { BugReporter } from './bug-reporting/interface'
 import Notification from './notification'
 import StartupEventTracker from './statistics/startup-event-tracker'
@@ -55,7 +54,6 @@ export type MysteriumVpnParams = {
   mysteriumProcessLogCache: LogCache,
   userSettingsStore: UserSettingsStorage,
   disconnectNotification: Notification,
-  featureToggle: FeatureToggle,
   startupEventTracker: StartupEventTracker,
   mainIpc: MainBufferedIpc,
   mainCommunication: MainCommunication,

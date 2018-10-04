@@ -20,7 +20,6 @@
 import { app, BrowserWindow } from 'electron'
 import type { MysteriumVpnParams } from './mysterium-vpn-params'
 import trayFactory from '../main/tray/factory'
-import FeatureToggle from './features/feature-toggle'
 import translations from './messages'
 import { onFirstEvent } from './communication/utils'
 import path from 'path'
@@ -45,6 +44,7 @@ import CommunicationBindings from './communication-bindings'
 import { METRICS, TAGS } from './bug-reporting/metrics/metrics'
 import type { BugReporterMetrics } from './bug-reporting/metrics/bug-reporter-metrics'
 import ProcessManager from './mysterium-client/process-manager'
+import { featureToggle } from '../main/helpers/features'
 import type { MainCommunication } from './communication/main-communication'
 import { reportUnknownProposalCountries } from './countries/reporting'
 
@@ -68,8 +68,6 @@ class MysteriumVpn {
   _userSettingsStore: UserSettingsStorage
   _disconnectNotification: Notification
   _startupEventTracker: StartupEventTracker
-  _featureToggle: FeatureToggle
-
   _window: Window
   _communication: MainCommunication
   _ipc: MainBufferedIpc
@@ -94,7 +92,6 @@ class MysteriumVpn {
     this._userSettingsStore = params.userSettingsStore
     this._disconnectNotification = params.disconnectNotification
     this._startupEventTracker = params.startupEventTracker
-    this._featureToggle = params.featureToggle
 
     this._ipc = params.mainIpc
     this._communication = params.mainCommunication
@@ -157,10 +154,10 @@ class MysteriumVpn {
     this._communicationBindings.setCurrentIdentityForEventTracker(this._startupEventTracker)
     this._communicationBindings.syncCurrentIdentityForBugReporter(this._bugReporter)
 
-    this._communicationBindings.startRegistrationFetcherOnCurrentIdentity(
-      this._featureToggle,
-      this._registrationFetcher
-    )
+    if (featureToggle().paymentsAreEnabled()) {
+      this._communicationBindings.startRegistrationFetcherOnCurrentIdentity(this._registrationFetcher)
+      this._communicationBindings.syncRegistrationStatus(this._registrationFetcher, this._bugReporter)
+    }
 
     this._bugReporterMetrics.setWithCurrentDateTime(METRICS.START_TIME)
 
@@ -180,10 +177,6 @@ class MysteriumVpn {
     await this._processManager.start()
 
     this._subscribeProposals()
-
-    if (this._featureToggle.paymentsAreEnabled()) {
-      this._communicationBindings.syncRegistrationStatus(this._registrationFetcher, this._bugReporter)
-    }
 
     this._communicationBindings.syncFavorites(this._userSettingsStore)
     this._communicationBindings.syncShowDisconnectNotifications(this._userSettingsStore)
