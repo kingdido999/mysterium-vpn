@@ -32,6 +32,10 @@ class FeatureToggle {
     return this._getFeatureState('payments', false)
   }
 
+  clientVersionCheckEnabled (): boolean {
+    return this._getFeatureState('clientVersionCheck', false)
+  }
+
   _getFeatureState (key: string, defaultValue: boolean): boolean {
     const features = this._features
 

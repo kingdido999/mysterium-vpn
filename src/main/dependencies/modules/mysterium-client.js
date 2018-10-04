@@ -47,6 +47,9 @@ import ProcessManager from '../../../app/mysterium-client/process-manager'
 import Monitoring from '../../../libraries/mysterium-client/monitoring'
 import type { MainCommunication } from '../../../app/communication/main-communication'
 import LogCache from '../../../app/logging/log-cache'
+import VersionCheck from '../../../libraries/mysterium-client/version-check'
+
+declare var MYSTERIUM_CLIENT_VERSION: ?string
 
 const WINDOWS = 'win32'
 const OSX = 'darwin'
@@ -180,27 +183,36 @@ function bootstrap (container: Container) {
   )
 
   container.service(
+    'mysteriumClientVersionCheck',
+    ['tequilapiClient'],
+    (tequilapiClient) => new VersionCheck(tequilapiClient, MYSTERIUM_CLIENT_VERSION)
+  )
+
+  container.service(
     'mysteriumClientProcessManager',
     [
       'mysteriumClientInstaller',
       'mysteriumClientProcess',
       'mysteriumClientMonitoring',
       'mainCommunication',
-      'mysteriumProcessLogCache'
+      'mysteriumProcessLogCache',
+      'mysteriumClientVersionCheck'
     ],
     (
       installer: Installer,
       process: Process,
       monitoring: Monitoring,
       communication: MainCommunication,
-      logCache: LogCache
+      logCache: LogCache,
+      versionCheck: VersionCheck
     ) => {
       return new ProcessManager(
         installer,
         process,
         monitoring,
         communication,
-        logCache
+        logCache,
+        versionCheck
       )
     }
   )

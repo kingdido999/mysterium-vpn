@@ -29,6 +29,8 @@ import { onFirstEventOrTimeout } from '../communication/utils'
 import { bugReporter, bugReporterMetrics } from '../../main/helpers/bug-reporter'
 import { METRICS } from '../bug-reporting/metrics/metrics'
 import type { DownCallback, UpCallback } from '../../libraries/mysterium-client/monitoring'
+import VersionCheck from '../../libraries/mysterium-client/version-check'
+import { featureToggle } from '../../main/helpers/feature-toggle'
 
 const LOG_PREFIX = '[ProcessManager]'
 const MYSTERIUM_CLIENT_STARTUP_THRESHOLD = 10000
@@ -39,19 +41,22 @@ class ProcessManager {
   _monitoring: Monitoring
   _communication: MainCommunication
   _logCache: LogCache
+  _versionCheck: VersionCheck
 
   constructor (
     installer: Installer,
     process: Process,
     monitoring: Monitoring,
     communication: MainCommunication,
-    logCache: LogCache
+    logCache: LogCache,
+    versionCheck: VersionCheck
   ) {
     this._installer = installer
     this._process = process
     this._monitoring = monitoring
     this._communication = communication
     this._logCache = logCache
+    this._versionCheck = versionCheck
   }
 
   async ensureInstallation () {
@@ -115,7 +120,7 @@ class ProcessManager {
 
     try {
       await this._process.start()
-      this._log(`mysterium_client start successful`)
+      this._log(`mysterium_client started successful`)
     } catch (error) {
       this._logError(`mysterium_client start failed`, error)
     }
@@ -141,9 +146,19 @@ class ProcessManager {
 
   _onProcessReady () {
     onFirstEventOrTimeout(this._monitoring.onStatusUp.bind(this._monitoring), MYSTERIUM_CLIENT_STARTUP_THRESHOLD)
-      .then(() => {
-        this._log(`Notify that 'mysterium_client' process is ready`)
-        this._communication.mysteriumClientReady.send()
+      .then(async () => {
+        if (!featureToggle().clientVersionCheckEnabled()) {
+          this._log(`Client version check disabled`)
+
+          return
+        }
+
+        const versionMatch: boolean = await this._versionCheck.runningVersionMatchesPackageVersion()
+        if (!versionMatch) {
+          this._log(`'mysterium_client' outdated. Killing it.`)
+
+          this._process.kill()
+        }
       })
       .catch(error => {
         if (this._monitoring.isStarted) {

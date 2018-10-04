@@ -48,6 +48,7 @@ let mainConfig = {
     new webpack.DefinePlugin({
       'process.env.BUILD_NUMBER': JSON.stringify(buildNumber),
       'process.env.MYSTERIUM_VPN_VERSION': JSON.stringify(version),
+      'MYSTERIUM_CLIENT_VERSION': JSON.stringify(dependencies['mysterium-client-bin']),
       'FEATURES': features
     }),
     new webpack.NoEmitOnErrorsPlugin()
