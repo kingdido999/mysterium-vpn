@@ -37,17 +37,19 @@ class ProcessManager {
     this._logCache = logCache
   }
 
-  async install () {
+  async ensureInstallation () {
     const needsInstallation = await this._installer.needsInstallation()
     if (!needsInstallation) {
       return true
     }
 
-    await this._installProcess()
-
-    const installed = await this._installer.needsInstallation()
-    if (!installed) {
-      bugReporter().captureErrorMessage('Process installation failed')
+    try {
+      await this._installProcess()
+    } catch (error) {
+      const installed = await this._installer.needsInstallation()
+      if (!installed) {
+        bugReporter().captureErrorMessage('Process installation failed', error.message)
+      }
     }
   }
 
@@ -161,13 +163,22 @@ class ProcessManager {
     })
 
     this._log(`Starting 'mysterium_client' monitoring`)
+
     this._monitoring.start()
   }
 
   async _repairProcess () {
     this._log(`Repairing 'mysterium_client' process`)
 
-    await this._process.repair()
+    try {
+      await this._process.repair()
+    } catch (error) {
+      this._monitoring.stop()
+
+      bugReporter().captureErrorException(error)
+
+      this._communication.sendRendererShowErrorMessage(translations.processStartError)
+    }
   }
 
   _log (...data: Array<any>) {

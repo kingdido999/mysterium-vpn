@@ -176,7 +176,7 @@ class MysteriumVpn {
 
     this._buildTray()
 
-    await this._processManager.install()
+    await this._processManager.ensureInstallation()
     await this._processManager.start()
 
     this._subscribeProposals()

@@ -36,6 +36,8 @@ interface Process {
 
   stop (): Promise<void>,
 
+  kill (): Promise<void>,
+
   onLog (level: string, callback: Function): void,
 
   setupLogging (): Promise<void>
