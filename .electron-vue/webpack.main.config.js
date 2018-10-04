@@ -14,6 +14,10 @@ const features = require('./features')
 
 const BabiliWebpackPlugin = require('babili-webpack-plugin')
 
+if(!dependencies['mysterium-client-bin'].match(/^(\d+\.\d+\.\d+)$/)) {
+  throw new Error('mysterium-client-bin package must use an exact version.')
+}
+
 let mainConfig = {
   entry: {
     main: path.join(__dirname, '../src/main/index.js')
