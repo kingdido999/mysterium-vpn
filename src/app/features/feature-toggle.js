@@ -18,7 +18,8 @@
 // @flow
 
 type Features = {
-  payments: ?boolean
+  payments?: boolean,
+  clientVersionCheck?: boolean
 }
 
 class FeatureToggle {
@@ -43,7 +44,7 @@ class FeatureToggle {
       return defaultValue
     }
 
-    if (!features[key]) {
+    if (typeof features[key] === 'undefined') {
       return defaultValue
     }
 
