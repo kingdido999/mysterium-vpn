@@ -194,7 +194,7 @@ class ProcessManager {
 
       bugReporter().captureErrorException(error)
 
-      this._communication.sendRendererShowErrorMessage(translations.processStartError)
+      this._communication.rendererShowError.send(translations.processStartError)
     }
   }
 
