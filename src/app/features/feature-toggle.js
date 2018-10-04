@@ -33,7 +33,7 @@ class FeatureToggle {
   }
 
   clientVersionCheckEnabled (): boolean {
-    return this._getFeatureState('clientVersionCheck', false)
+    return this._getFeatureState('clientVersionCheck', true)
   }
 
   _getFeatureState (key: string, defaultValue: boolean): boolean {
