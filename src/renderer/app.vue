@@ -107,7 +107,7 @@ export default {
     })
 
     this.rendererCommunication.rendererShowError.on((error) => {
-      logger.info('App error received from communication:', error.hint, error.message, 'fatal:', error.fatal)
+      logger.info('App error received from communication:', error.hint, error.message)
       this.$store.dispatch(type.OVERLAY_ERROR, error)
     })
 
