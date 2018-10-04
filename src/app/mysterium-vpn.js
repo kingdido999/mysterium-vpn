@@ -44,7 +44,7 @@ import CommunicationBindings from './communication-bindings'
 import { METRICS, TAGS } from './bug-reporting/metrics/metrics'
 import type { BugReporterMetrics } from './bug-reporting/metrics/bug-reporter-metrics'
 import ProcessManager from './mysterium-client/process-manager'
-import { featureToggle } from '../main/helpers/features'
+import { featureToggle } from '../main/helpers/feature-toggle'
 import type { MainCommunication } from './communication/main-communication'
 import { reportUnknownProposalCountries } from './countries/reporting'
 
