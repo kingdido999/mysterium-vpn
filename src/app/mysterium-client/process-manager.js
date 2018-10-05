@@ -18,9 +18,10 @@
 // @flow
 
 import type { Installer, Process } from '../../libraries/mysterium-client'
-import Monitoring from '../../libraries/mysterium-client/monitoring'
+import type { Monitoring, DownCallback, UpCallback } from '../../libraries/mysterium-client/monitoring'
 import type { MainCommunication } from '../communication/main-communication'
-import LogCache from '../logging/log-cache'
+import type { LogCache } from '../logging/log-cache'
+import type { VersionCheck } from '../../libraries/mysterium-client/version-check'
 import translations from '../messages'
 import { SUDO_PROMT_PERMISSION_DENIED } from '../../libraries/mysterium-client/launch-daemon/launch-daemon-installer'
 import logger from '../logger'
@@ -28,8 +29,6 @@ import { logLevels as processLogLevels } from '../../libraries/mysterium-client'
 import { onFirstEventOrTimeout } from '../communication/utils'
 import { bugReporter, bugReporterMetrics } from '../../main/helpers/bug-reporter'
 import { METRICS } from '../bug-reporting/metrics/metrics'
-import type { DownCallback, UpCallback } from '../../libraries/mysterium-client/monitoring'
-import VersionCheck from '../../libraries/mysterium-client/version-check'
 import { featureToggle } from '../../main/helpers/feature-toggle'
 
 const LOG_PREFIX = '[ProcessManager]'

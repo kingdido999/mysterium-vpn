@@ -19,7 +19,11 @@
 
 import { TequilapiClient } from 'mysterium-tequilapi/lib/client'
 
-class VersionCheck {
+interface VersionCheck {
+  runningVersionMatchesPackageVersion (): Promise<boolean>
+}
+
+class TequilapiVersionCheck {
   _tequilapi: TequilapiClient
   _packageVersion: ?string
 
@@ -35,4 +39,5 @@ class VersionCheck {
   }
 }
 
-export default VersionCheck
+export default TequilapiVersionCheck
+export type { VersionCheck }

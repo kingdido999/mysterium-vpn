@@ -17,7 +17,7 @@
 
 // @flow
 
-import { beforeEach, describe, expect, it } from '../../../helpers/dependencies'
+import { describe, expect, it } from '../../../helpers/dependencies'
 import EmptyTequilapiClientMock from '../../renderer/store/modules/empty-tequilapi-client-mock'
 import type { NodeHealthcheckDTO } from 'mysterium-tequilapi/lib/dto/node-healthcheck'
 import NodeBuildInfoDTO from 'mysterium-tequilapi/lib/dto/node-build-info'

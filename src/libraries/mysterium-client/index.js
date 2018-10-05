@@ -18,7 +18,6 @@
 // @flow
 
 import type { Callback } from '../subscriber'
-import Monitoring from './monitoring'
 import logLevels from './log-levels'
 
 type LogCallback = Callback<any>
@@ -43,5 +42,5 @@ interface Process {
   setupLogging (): Promise<void>
 }
 
-export { Monitoring, logLevels }
+export { logLevels }
 export type { Installer, Process, LogCallback }
