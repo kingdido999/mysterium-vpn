@@ -160,7 +160,7 @@ class ProcessManager {
         }
       })
       .catch(error => {
-        if (this._monitoring.isStarted) {
+        if (this._monitoring.isStarted()) {
           this._communication.rendererShowError.send(translations.processStartError)
         }
 

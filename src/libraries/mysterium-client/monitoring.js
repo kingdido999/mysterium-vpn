@@ -38,7 +38,7 @@ interface Monitoring {
 
   onStatusDown (callback: DownCallback): void,
 
-  get isStarted(): boolean
+  isStarted (): boolean
 }
 
 class TequilaMonitoring implements Monitoring {
@@ -55,7 +55,7 @@ class TequilaMonitoring implements Monitoring {
     this.api = tequilapi
   }
 
-  get isStarted (): boolean {
+  isStarted (): boolean {
     return this._isStarted
   }
 

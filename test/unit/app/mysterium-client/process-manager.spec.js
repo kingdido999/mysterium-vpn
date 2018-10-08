@@ -30,32 +30,40 @@ import type { VersionCheck } from '../../../../src/libraries/mysterium-client/ve
 import type { LogCache } from '../../../../src/app/logging/log-cache'
 import { buildMainCommunication } from '../../../../src/app/communication/main-communication'
 import FakeMessageBus from '../../../helpers/fake-message-bus'
+import TequilapiVersionCheck from '../../../../src/libraries/mysterium-client/version-check'
+import EmptyTequilapiClientMock from '../../renderer/store/modules/empty-tequilapi-client-mock'
+import NodeBuildInfoDTO from 'mysterium-tequilapi/lib/dto/node-build-info'
 
 class InstallerMock implements Installer {
-  needsInstallation (): Promise<boolean> {
+  needsInstallationMock: boolean = false
+  installInvoked: boolean = false
+
+  async needsInstallation (): Promise<boolean> {
+    return this.needsInstallationMock
   }
 
-  install (): Promise<void> {
+  async install (): Promise<void> {
+    this.installInvoked = true
   }
 }
 
 class ProcessMock implements Process {
-  start (): Promise<void> {
+  async start (): Promise<void> {
   }
 
-  repair (): Promise<void> {
+  async repair (): Promise<void> {
   }
 
-  stop (): Promise<void> {
+  async stop (): Promise<void> {
   }
 
-  kill (): Promise<void> {
+  async kill (): Promise<void> {
   }
 
   onLog (level: string, callback: Function): void {
   }
 
-  setupLogging (): Promise<void> {
+  async setupLogging (): Promise<void> {
   }
 }
 
@@ -75,17 +83,30 @@ class MonitoringMock implements Monitoring {
   onStatusDown (callback: DownCallback): void {
   }
 
-  get isStarted (): boolean {
+  isStarted (): boolean {
+    return true
   }
 }
 
 class LogCacheMock implements LogCache {
-
+  pushToLevel (level: LogLevel, data: any): void {
+  }
 }
 
 class VersionCheckMock implements VersionCheck {
-  runningVersionMatchesPackageVersion (): Promise<boolean> {
+  async runningVersionMatchesPackageVersion (): Promise<boolean> {
+    return true
+  }
+}
 
+class VersionTequilapiClientMock extends EmptyTequilapiClientMock {
+  async healthCheck (_timeout: ?number) {
+    return {
+      uptime: '',
+      process: 0,
+      version: '1.0.0',
+      buildInfo: new NodeBuildInfoDTO({})
+    }
   }
 }
 
@@ -106,9 +127,18 @@ describe('ProcessManager', () => {
     versionCheck
   )
 
+  describe('.ensureInstallation', () => {
+    it('installs when process needs installation', async () => {
+      installer.needsInstallationMock = true
+      await processManager.ensureInstallation()
+      expect(installer.installInvoked).to.be.true
+    })
+  })
+
   describe('.runningVersionMatchesPackageVersion', () => {
     it('returns true when healthcheck version matches', async () => {
-      const versionCheck = new VersionCheck(tequilapiClient, '1.0.0')
+      const tequilapiClient = new VersionTequilapiClientMock()
+      const versionCheck = new TequilapiVersionCheck(tequilapiClient, '1.0.0')
       expect(await versionCheck.runningVersionMatchesPackageVersion()).to.be.true
     })
   })
