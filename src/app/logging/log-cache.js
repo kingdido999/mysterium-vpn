@@ -57,5 +57,5 @@ class LogCache {
   }
 }
 
-export default LogCache
 export type { SerializedLogCache }
+export default LogCache

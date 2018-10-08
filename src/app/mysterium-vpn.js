@@ -44,9 +44,9 @@ import CommunicationBindings from './communication-bindings'
 import { METRICS, TAGS } from './bug-reporting/metrics/metrics'
 import type { BugReporterMetrics } from './bug-reporting/metrics/bug-reporter-metrics'
 import ProcessManager from './mysterium-client/process-manager'
-import { featureToggle } from '../main/helpers/feature-toggle'
 import type { MainCommunication } from './communication/main-communication'
 import { reportUnknownProposalCountries } from './countries/reporting'
+import FeatureToggle from './features/feature-toggle'
 
 const LOG_PREFIX = '[MysteriumVpn] '
 
@@ -67,12 +67,14 @@ class MysteriumVpn {
   _mysteriumProcessLogCache: LogCache
   _userSettingsStore: UserSettingsStorage
   _disconnectNotification: Notification
+  _featureToggle: FeatureToggle
   _startupEventTracker: StartupEventTracker
-  _window: Window
-  _communication: MainCommunication
   _ipc: MainBufferedIpc
+  _communication: MainCommunication
   _syncCallbacksInitializer: SyncCallbacksInitializer
   _communicationBindings: CommunicationBindings
+
+  _window: Window // TODO: convert to maybe type
 
   constructor (params: MysteriumVpnParams) {
     this._browserWindowFactory = params.browserWindowFactory
@@ -91,6 +93,7 @@ class MysteriumVpn {
     this._mysteriumProcessLogCache = params.mysteriumProcessLogCache
     this._userSettingsStore = params.userSettingsStore
     this._disconnectNotification = params.disconnectNotification
+    this._featureToggle = params.featureToggle
     this._startupEventTracker = params.startupEventTracker
 
     this._ipc = params.mainIpc
@@ -154,7 +157,7 @@ class MysteriumVpn {
     this._communicationBindings.setCurrentIdentityForEventTracker(this._startupEventTracker)
     this._communicationBindings.syncCurrentIdentityForBugReporter(this._bugReporter)
 
-    if (featureToggle().paymentsAreEnabled()) {
+    if (this._featureToggle.paymentsAreEnabled()) {
       this._communicationBindings.startRegistrationFetcherOnCurrentIdentity(this._registrationFetcher)
       this._communicationBindings.syncRegistrationStatus(this._registrationFetcher, this._bugReporter)
     }

@@ -29,7 +29,7 @@ import { logLevels as processLogLevels } from '../../libraries/mysterium-client'
 import { onFirstEventOrTimeout } from '../communication/utils'
 import { bugReporter, bugReporterMetrics } from '../../main/helpers/bug-reporter'
 import { METRICS } from '../bug-reporting/metrics/metrics'
-import { featureToggle } from '../../main/helpers/feature-toggle'
+import FeatureToggle from '../features/feature-toggle'
 
 const LOG_PREFIX = '[ProcessManager]'
 const MYSTERIUM_CLIENT_STARTUP_THRESHOLD = 10000
@@ -41,6 +41,7 @@ class ProcessManager {
   _communication: MainCommunication
   _logCache: LogCache
   _versionCheck: VersionCheck
+  _featureToggle: FeatureToggle
 
   constructor (
     installer: Installer,
@@ -48,7 +49,8 @@ class ProcessManager {
     monitoring: Monitoring,
     communication: MainCommunication,
     logCache: LogCache,
-    versionCheck: VersionCheck
+    versionCheck: VersionCheck,
+    featureToggle: FeatureToggle
   ) {
     this._installer = installer
     this._process = process
@@ -56,6 +58,7 @@ class ProcessManager {
     this._communication = communication
     this._logCache = logCache
     this._versionCheck = versionCheck
+    this._featureToggle = featureToggle
   }
 
   async ensureInstallation () {
@@ -146,7 +149,7 @@ class ProcessManager {
   _onProcessReady () {
     onFirstEventOrTimeout(this._monitoring.onStatusUp.bind(this._monitoring), MYSTERIUM_CLIENT_STARTUP_THRESHOLD)
       .then(async () => {
-        if (!featureToggle().clientVersionCheckEnabled()) {
+        if (!this._featureToggle.clientVersionCheckEnabled()) {
           this._log(`Client version check disabled`)
 
           return

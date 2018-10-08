@@ -30,6 +30,7 @@ import type { VersionCheck } from '../../../../src/libraries/mysterium-client/ve
 import { buildMainCommunication } from '../../../../src/app/communication/main-communication'
 import FakeMessageBus from '../../../helpers/fake-message-bus'
 import LogCache from '../../../../src/app/logging/log-cache'
+import FeatureToggle from '../../../../src/app/features/feature-toggle'
 
 class InstallerMock implements Installer {
   needsInstallationMock: boolean = false
@@ -99,13 +100,16 @@ describe('ProcessManager', () => {
   const versionCheck = new VersionCheckMock()
   const communication = buildMainCommunication(new FakeMessageBus())
 
+  const featureToggle = new FeatureToggle({})
+
   const processManager = new ProcessManager(
     installer,
     process,
     monitoring,
     communication,
     logCache,
-    versionCheck
+    versionCheck,
+    featureToggle
   )
 
   describe('.ensureInstallation', () => {

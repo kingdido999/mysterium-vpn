@@ -36,6 +36,7 @@ import type { StringLogger } from './logging/string-logger'
 import CommunicationBindings from './communication-bindings'
 import ProcessManager from './mysterium-client/process-manager'
 import type { MainCommunication } from './communication/main-communication'
+import FeatureToggle from './features/feature-toggle'
 
 export type MysteriumVpnParams = {
   browserWindowFactory: () => BrowserWindow,
@@ -54,6 +55,7 @@ export type MysteriumVpnParams = {
   mysteriumProcessLogCache: LogCache,
   userSettingsStore: UserSettingsStorage,
   disconnectNotification: Notification,
+  featureToggle: FeatureToggle,
   startupEventTracker: StartupEventTracker,
   mainIpc: MainBufferedIpc,
   mainCommunication: MainCommunication,

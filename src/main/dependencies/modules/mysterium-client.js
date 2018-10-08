@@ -48,6 +48,7 @@ import Monitoring from '../../../libraries/mysterium-client/monitoring'
 import type { MainCommunication } from '../../../app/communication/main-communication'
 import LogCache from '../../../app/logging/log-cache'
 import VersionCheck from '../../../libraries/mysterium-client/version-check'
+import FeatureToggle from '../../../app/features/feature-toggle'
 
 declare var MYSTERIUM_CLIENT_VERSION: ?string
 
@@ -196,7 +197,8 @@ function bootstrap (container: Container) {
       'mysteriumClientMonitoring',
       'mainCommunication',
       'mysteriumProcessLogCache',
-      'mysteriumClientVersionCheck'
+      'mysteriumClientVersionCheck',
+      'featureToggle'
     ],
     (
       installer: Installer,
@@ -204,7 +206,8 @@ function bootstrap (container: Container) {
       monitoring: Monitoring,
       communication: MainCommunication,
       logCache: LogCache,
-      versionCheck: VersionCheck
+      versionCheck: VersionCheck,
+      featureToggle: FeatureToggle
     ) => {
       return new ProcessManager(
         installer,
@@ -212,7 +215,8 @@ function bootstrap (container: Container) {
         monitoring,
         communication,
         logCache,
-        versionCheck
+        versionCheck,
+        featureToggle
       )
     }
   )
