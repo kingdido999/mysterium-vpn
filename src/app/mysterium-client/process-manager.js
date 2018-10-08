@@ -20,7 +20,7 @@
 import type { Installer, Process } from '../../libraries/mysterium-client'
 import type { Monitoring, DownCallback, UpCallback } from '../../libraries/mysterium-client/monitoring'
 import type { MainCommunication } from '../communication/main-communication'
-import type { LogCache } from '../logging/log-cache'
+import LogCache from '../logging/log-cache'
 import type { VersionCheck } from '../../libraries/mysterium-client/version-check'
 import translations from '../messages'
 import { SUDO_PROMT_PERMISSION_DENIED } from '../../libraries/mysterium-client/launch-daemon/launch-daemon-installer'

@@ -27,12 +27,9 @@ import type {
   UpCallback
 } from '../../../../src/libraries/mysterium-client/monitoring'
 import type { VersionCheck } from '../../../../src/libraries/mysterium-client/version-check'
-import type { LogCache } from '../../../../src/app/logging/log-cache'
 import { buildMainCommunication } from '../../../../src/app/communication/main-communication'
 import FakeMessageBus from '../../../helpers/fake-message-bus'
-import TequilapiVersionCheck from '../../../../src/libraries/mysterium-client/version-check'
-import EmptyTequilapiClientMock from '../../renderer/store/modules/empty-tequilapi-client-mock'
-import NodeBuildInfoDTO from 'mysterium-tequilapi/lib/dto/node-build-info'
+import LogCache from '../../../../src/app/logging/log-cache'
 
 class InstallerMock implements Installer {
   needsInstallationMock: boolean = false
@@ -88,25 +85,9 @@ class MonitoringMock implements Monitoring {
   }
 }
 
-class LogCacheMock implements LogCache {
-  pushToLevel (level: LogLevel, data: any): void {
-  }
-}
-
 class VersionCheckMock implements VersionCheck {
   async runningVersionMatchesPackageVersion (): Promise<boolean> {
     return true
-  }
-}
-
-class VersionTequilapiClientMock extends EmptyTequilapiClientMock {
-  async healthCheck (_timeout: ?number) {
-    return {
-      uptime: '',
-      process: 0,
-      version: '1.0.0',
-      buildInfo: new NodeBuildInfoDTO({})
-    }
   }
 }
 
@@ -114,7 +95,7 @@ describe('ProcessManager', () => {
   const monitoring = new MonitoringMock()
   const installer = new InstallerMock()
   const process = new ProcessMock()
-  const logCache = new LogCacheMock()
+  const logCache = new LogCache()
   const versionCheck = new VersionCheckMock()
   const communication = buildMainCommunication(new FakeMessageBus())
 
@@ -132,14 +113,6 @@ describe('ProcessManager', () => {
       installer.needsInstallationMock = true
       await processManager.ensureInstallation()
       expect(installer.installInvoked).to.be.true
-    })
-  })
-
-  describe('.runningVersionMatchesPackageVersion', () => {
-    it('returns true when healthcheck version matches', async () => {
-      const tequilapiClient = new VersionTequilapiClientMock()
-      const versionCheck = new TequilapiVersionCheck(tequilapiClient, '1.0.0')
-      expect(await versionCheck.runningVersionMatchesPackageVersion()).to.be.true
     })
   })
 })

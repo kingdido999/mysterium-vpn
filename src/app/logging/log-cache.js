@@ -29,11 +29,7 @@ type SerializedLogCache = {
   error: string
 }
 
-interface LogCache {
-  pushToLevel(level: LogLevel, data: any): void
-}
-
-class LogCachePusher implements LogCache {
+class LogCache {
   _logs: LogCacheStore = {
     info: new LimitedLinkedList(200),
     error: new LimitedLinkedList(200)
@@ -61,5 +57,5 @@ class LogCachePusher implements LogCache {
   }
 }
 
-export type { SerializedLogCache, LogCache }
-export default LogCachePusher
+export default LogCache
+export type { SerializedLogCache }

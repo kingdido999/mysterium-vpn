@@ -24,18 +24,25 @@ import NodeBuildInfoDTO from 'mysterium-tequilapi/lib/dto/node-build-info'
 import VersionCheck from '../../../../src/libraries/mysterium-client/version-check'
 
 class TequilapiMock extends EmptyTequilapiClientMock {
+  _versionMock: string
+
+  constructor (versionMock: string) {
+    super()
+    this._versionMock = versionMock
+  }
+
   async healthCheck (_timeout: ?number): Promise<NodeHealthcheckDTO> {
     return {
       uptime: '',
       process: 0,
-      version: '1.0.0',
+      version: this._versionMock,
       buildInfo: new NodeBuildInfoDTO({})
     }
   }
 }
 
 describe('VersionCheck', () => {
-  const tequilapiClient = new TequilapiMock()
+  const tequilapiClient = new TequilapiMock('1.0.0')
 
   describe('.runningVersionMatchesPackageVersion', () => {
     it('returns true when healthcheck version matches', async () => {
@@ -43,7 +50,7 @@ describe('VersionCheck', () => {
       expect(await versionCheck.runningVersionMatchesPackageVersion()).to.be.true
     })
 
-    it('returns true when healthcheck version matches', async () => {
+    it('returns false when healthcheck version differs', async () => {
       const versionCheck = new VersionCheck(tequilapiClient, '0.0.1')
       expect(await versionCheck.runningVersionMatchesPackageVersion()).to.be.false
     })

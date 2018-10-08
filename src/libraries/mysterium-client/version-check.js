@@ -23,6 +23,7 @@ interface VersionCheck {
   runningVersionMatchesPackageVersion (): Promise<boolean>
 }
 
+// TODO: extract
 class TequilapiVersionCheck {
   _tequilapi: TequilapiClient
   _packageVersion: ?string
