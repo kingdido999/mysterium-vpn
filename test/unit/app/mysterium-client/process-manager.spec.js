@@ -17,14 +17,13 @@
 
 // @flow
 
-import { describe, expect, it } from '../../../helpers/dependencies'
+import { beforeEach, describe, expect, it } from '../../../helpers/dependencies'
 import ProcessManager from '../../../../src/app/mysterium-client/process-manager'
 import type { Installer, Process } from '../../../../src/libraries/mysterium-client'
 import type {
-  DownCallback,
   Monitoring,
   StatusCallback,
-  UpCallback
+  EmptyCallback
 } from '../../../../src/libraries/mysterium-client/monitoring'
 import type { VersionCheck } from '../../../../src/libraries/mysterium-client/version-check'
 import { buildMainCommunication } from '../../../../src/app/communication/main-communication'
@@ -75,10 +74,10 @@ class MonitoringMock implements Monitoring {
   onStatus (callback: StatusCallback): void {
   }
 
-  onStatusUp (callback: UpCallback): void {
+  onStatusUp (callback: EmptyCallback): void {
   }
 
-  onStatusDown (callback: DownCallback): void {
+  onStatusDown (callback: EmptyCallback): void {
   }
 
   isStarted (): boolean {
@@ -93,30 +92,59 @@ class VersionCheckMock implements VersionCheck {
 }
 
 describe('ProcessManager', () => {
-  const monitoring = new MonitoringMock()
-  const installer = new InstallerMock()
-  const process = new ProcessMock()
-  const logCache = new LogCache()
-  const versionCheck = new VersionCheckMock()
-  const communication = buildMainCommunication(new FakeMessageBus())
+  let monitoring
+  let installer
+  let process
+  let logCache
+  let versionCheck
+  let communication
+  let featureToggle
 
-  const featureToggle = new FeatureToggle({})
+  let processManager
 
-  const processManager = new ProcessManager(
-    installer,
-    process,
-    monitoring,
-    communication,
-    logCache,
-    versionCheck,
-    featureToggle
-  )
+  beforeEach(() => {
+    monitoring = new MonitoringMock()
+    installer = new InstallerMock()
+    process = new ProcessMock()
+    logCache = new LogCache()
+    versionCheck = new VersionCheckMock()
+    communication = buildMainCommunication(new FakeMessageBus())
+    featureToggle = new FeatureToggle({})
+
+    processManager = new ProcessManager(
+      installer,
+      process,
+      monitoring,
+      communication,
+      logCache,
+      versionCheck,
+      featureToggle
+    )
+  })
 
   describe('.ensureInstallation', () => {
-    it('installs when process needs installation', async () => {
+    it('installs when process needs it', async () => {
       installer.needsInstallationMock = true
       await processManager.ensureInstallation()
       expect(installer.installInvoked).to.be.true
+    })
+
+    it('does not install when process does not need it', async () => {
+      installer.needsInstallationMock = false
+      await processManager.ensureInstallation()
+      expect(installer.installInvoked).to.be.false
+    })
+  })
+
+  describe('.start', () => {
+    it('does not raise error', async () => {
+      await processManager.start()
+    })
+  })
+
+  describe('.stop', () => {
+    it('does not raise error', async () => {
+      await processManager.stop()
     })
   })
 })

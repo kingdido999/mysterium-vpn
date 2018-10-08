@@ -24,8 +24,7 @@ const HEALTH_CHECK_INTERVAL = 1500
 const healthCheckTimeout = 500
 
 type StatusCallback = (boolean) => void
-type UpCallback = () => void
-type DownCallback = () => void
+type EmptyCallback = () => void
 
 interface Monitoring {
   start (): void,
@@ -34,9 +33,9 @@ interface Monitoring {
 
   onStatus (callback: StatusCallback): void,
 
-  onStatusUp (callback: UpCallback): void,
+  onStatusUp (callback: EmptyCallback): void,
 
-  onStatusDown (callback: DownCallback): void,
+  onStatusDown (callback: EmptyCallback): void,
 
   isStarted (): boolean
 }
@@ -47,8 +46,8 @@ class TequilaMonitoring implements Monitoring {
 
   _lastIsRunning: boolean = false
   _subscribersStatus: Array<StatusCallback> = []
-  _subscribersUp: Array<UpCallback> = []
-  _subscribersDown: Array<DownCallback> = []
+  _subscribersUp: Array<EmptyCallback> = []
+  _subscribersDown: Array<EmptyCallback> = []
   _isStarted: boolean = false
 
   constructor (tequilapi: TequilapiClient) {
@@ -88,11 +87,11 @@ class TequilaMonitoring implements Monitoring {
     }
   }
 
-  onStatusUp (callback: UpCallback) {
+  onStatusUp (callback: EmptyCallback) {
     this._subscribersUp.push(callback)
   }
 
-  onStatusDown (callback: DownCallback) {
+  onStatusDown (callback: EmptyCallback) {
     this._subscribersDown.push(callback)
   }
 
@@ -142,13 +141,13 @@ class TequilaMonitoring implements Monitoring {
   }
 
   _notifySubscribersUp () {
-    this._subscribersUp.forEach((callback: UpCallback) => {
+    this._subscribersUp.forEach((callback: EmptyCallback) => {
       callback()
     })
   }
 
   _notifySubscribersDown () {
-    this._subscribersDown.forEach((callback: DownCallback) => {
+    this._subscribersDown.forEach((callback: EmptyCallback) => {
       callback()
     })
   }
@@ -174,4 +173,4 @@ async function throwErrorAfterTimeout (timeout: number) {
 
 export { waitForStatusUp, HEALTH_CHECK_INTERVAL }
 export default TequilaMonitoring
-export type { StatusCallback, UpCallback, DownCallback, Monitoring }
+export type { StatusCallback, EmptyCallback, Monitoring }

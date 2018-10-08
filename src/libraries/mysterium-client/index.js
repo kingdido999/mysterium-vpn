@@ -33,8 +33,14 @@ interface Process {
 
   repair (): Promise<void>,
 
+  /**
+   * Stop process gracefully.
+   */
   stop (): Promise<void>,
 
+  /**
+   * Force-kill process.
+   */
   kill (): Promise<void>,
 
   onLog (level: string, callback: Function): void,

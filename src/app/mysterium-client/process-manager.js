@@ -18,7 +18,7 @@
 // @flow
 
 import type { Installer, Process } from '../../libraries/mysterium-client'
-import type { Monitoring, DownCallback, UpCallback } from '../../libraries/mysterium-client/monitoring'
+import type { Monitoring, EmptyCallback } from '../../libraries/mysterium-client/monitoring'
 import type { MainCommunication } from '../communication/main-communication'
 import LogCache from '../logging/log-cache'
 import type { VersionCheck } from '../../libraries/mysterium-client/version-check'
@@ -97,11 +97,11 @@ class ProcessManager {
     }
   }
 
-  onStatusUp (callback: UpCallback) {
+  onStatusUp (callback: EmptyCallback) {
     this._monitoring.onStatusUp(callback)
   }
 
-  onStatusDown (callback: DownCallback) {
+  onStatusDown (callback: EmptyCallback) {
     this._monitoring.onStatusDown(callback)
   }
 
@@ -118,18 +118,18 @@ class ProcessManager {
   }
 
   async _startProcess () {
-    this._log(`Starting 'mysterium_client' process`)
+    this._logInfo(`Starting 'mysterium_client' process`)
 
     try {
       await this._process.start()
-      this._log(`mysterium_client started successful`)
+      this._logInfo(`mysterium_client started successful`)
     } catch (error) {
       this._logError(`mysterium_client start failed`, error)
     }
   }
 
   async _installProcess () {
-    this._log(`Installing 'mysterium_client' process`)
+    this._logInfo(`Installing 'mysterium_client' process`)
 
     try {
       await this._installer.install()
@@ -150,14 +150,14 @@ class ProcessManager {
     onFirstEventOrTimeout(this._monitoring.onStatusUp.bind(this._monitoring), MYSTERIUM_CLIENT_STARTUP_THRESHOLD)
       .then(async () => {
         if (!this._featureToggle.clientVersionCheckEnabled()) {
-          this._log(`Client version check disabled`)
+          this._logInfo(`Client version check disabled`)
 
           return
         }
 
         const versionMatch: boolean = await this._versionCheck.runningVersionMatchesPackageVersion()
         if (!versionMatch) {
-          this._log(`'mysterium_client' outdated. Killing it.`)
+          this._logInfo(`'mysterium_client' outdated. Killing it.`)
 
           this._process.kill()
         }
@@ -173,7 +173,7 @@ class ProcessManager {
 
   _startMonitoring () {
     this._monitoring.onStatusUp(() => {
-      this._log(`'mysterium_client' is up`)
+      this._logInfo(`'mysterium_client' is up`)
 
       this._communication.healthcheckUp.send()
 
@@ -181,7 +181,7 @@ class ProcessManager {
     })
 
     this._monitoring.onStatusDown(() => {
-      this._log(`'mysterium_client' is down`)
+      this._logInfo(`'mysterium_client' is down`)
 
       this._communication.healthcheckDown.send()
 
@@ -196,13 +196,13 @@ class ProcessManager {
       this._repairProcess()
     })
 
-    this._log(`Starting 'mysterium_client' monitoring`)
+    this._logInfo(`Starting 'mysterium_client' monitoring`)
 
     this._monitoring.start()
   }
 
   async _repairProcess () {
-    this._log(`Repairing 'mysterium_client' process`)
+    this._logInfo(`Repairing 'mysterium_client' process`)
 
     try {
       await this._process.repair()
@@ -215,12 +215,16 @@ class ProcessManager {
     }
   }
 
-  _log (...data: Array<any>) {
-    logger.info(`${LOG_PREFIX} ${data.join(' ')}`)
+  _logInfo (...data: Array<any>) {
+    logger.info(this._formatLog(data))
   }
 
   _logError (...data: Array<any>) {
-    logger.error(`${LOG_PREFIX} ${data.join(' ')}`)
+    logger.error(this._formatLog(data))
+  }
+
+  _formatLog (data: Array<any>) {
+    return `${LOG_PREFIX} ${data.join(' ')}`
   }
 }
 
