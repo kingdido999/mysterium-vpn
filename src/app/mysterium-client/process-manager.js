@@ -66,15 +66,7 @@ class ProcessManager {
     if (!needsInstallation) {
       return
     }
-
-    try {
-      await this._installProcess()
-    } catch (error) {
-      const installed = await this._installer.needsInstallation()
-      if (!installed) {
-        bugReporter().captureErrorMessage('Process installation failed', error.message)
-      }
-    }
+    await this._installProcess()
   }
 
   async start () {

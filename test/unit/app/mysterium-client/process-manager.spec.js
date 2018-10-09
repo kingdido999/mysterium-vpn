@@ -30,13 +30,15 @@ import { buildMainCommunication } from '../../../../src/app/communication/main-c
 import LogCache from '../../../../src/app/logging/log-cache'
 import FeatureToggle from '../../../../src/app/features/feature-toggle'
 import { buildRendererCommunication } from '../../../../src/app/communication/renderer-communication'
-import { CallbackRecorder } from '../../../helpers/utils'
+import { CallbackRecorder, captureAsyncError } from '../../../helpers/utils'
 import DirectMessageBus from '../../../helpers/direct-message-bus'
+import { SUDO_PROMT_PERMISSION_DENIED }
+  from '../../../../src/libraries/mysterium-client/launch-daemon/launch-daemon-installer'
 
 class InstallerMock implements Installer {
   needsInstallationMock: boolean = false
   installInvoked: boolean = false
-  installFails: boolean = false
+  installErrorMock: ?Error = null
 
   async needsInstallation (): Promise<boolean> {
     return this.needsInstallationMock
@@ -44,8 +46,8 @@ class InstallerMock implements Installer {
 
   async install (): Promise<void> {
     this.installInvoked = true
-    if (this.installFails) {
-      throw new Error('Mock install error')
+    if (this.installErrorMock) {
+      throw this.installErrorMock
     }
   }
 }
@@ -147,16 +149,42 @@ describe('ProcessManager', () => {
       expect(installer.installInvoked).to.be.false
     })
 
-    it('sends error message to renderer when installation fails', async () => {
-      installer.needsInstallationMock = true
-      installer.installFails = true
-      const recorder = new CallbackRecorder()
-      remoteCommunication.rendererShowError.on(recorder.getCallback())
+    describe('when installation fails', () => {
+      beforeEach(() => {
+        installer.needsInstallationMock = true
+        installer.installErrorMock = new Error('Mock error')
+      })
 
-      await processManager.ensureInstallation()
+      it('throws error', async () => {
+        const err = await captureAsyncError(() => processManager.ensureInstallation())
+        if (!(err instanceof Error)) {
+          throw new Error('Expected error')
+        }
+        expect(err.message).to.eql('Failed to install \'mysterium_client\' process. Mock error')
+      })
 
-      expect(recorder.invoked).to.be.true
-      expect(recorder.firstArgument).to.eql({ message: 'Failed to install MysteriumVPN.' })
+      it('sends error message to renderer', async () => {
+        const recorder = new CallbackRecorder()
+        remoteCommunication.rendererShowError.on(recorder.getCallback())
+
+        await captureAsyncError(() => processManager.ensureInstallation())
+
+        expect(recorder.invoked).to.be.true
+        expect(recorder.firstArgument).to.eql({ message: 'Failed to install MysteriumVPN.' })
+      })
+
+      it('sends permission message to renderer when permissions were denied', async () => {
+        installer.installErrorMock = new Error(SUDO_PROMT_PERMISSION_DENIED)
+        const recorder = new CallbackRecorder()
+        remoteCommunication.rendererShowError.on(recorder.getCallback())
+
+        await captureAsyncError(() => processManager.ensureInstallation())
+
+        expect(recorder.invoked).to.be.true
+        expect(recorder.firstArgument).to.eql({
+          message: 'Failed to install MysteriumVPN. Please restart the app and grant permissions.'
+        })
+      })
     })
   })
 
