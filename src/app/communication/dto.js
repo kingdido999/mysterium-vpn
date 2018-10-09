@@ -49,7 +49,7 @@ export type TermsAnsweredDTO = {
 
 export type AppErrorDTO = {
   message: string,
-  hint: string
+  hint?: string
 }
 
 export type LogDTO = {

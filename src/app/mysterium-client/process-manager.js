@@ -64,7 +64,7 @@ class ProcessManager {
   async ensureInstallation () {
     const needsInstallation = await this._installer.needsInstallation()
     if (!needsInstallation) {
-      return true
+      return
     }
 
     try {
@@ -140,7 +140,7 @@ class ProcessManager {
         messageForUser = translations.processInstallationPermissionsError
       }
 
-      this._communication.rendererShowError.send(messageForUser)
+      this._communication.rendererShowError.send({ message: messageForUser })
 
       throw new Error(`Failed to install 'mysterium_client' process. ` + error.message)
     }
@@ -164,7 +164,7 @@ class ProcessManager {
       })
       .catch(error => {
         if (this._monitoring.isStarted()) {
-          this._communication.rendererShowError.send(translations.processStartError)
+          this._communication.rendererShowError.send({ message: translations.processStartError })
         }
 
         this._logError(`Failed to start 'mysterium_client' process`, error)
@@ -211,7 +211,7 @@ class ProcessManager {
 
       bugReporter().captureErrorException(error)
 
-      this._communication.rendererShowError.send(translations.processStartError)
+      this._communication.rendererShowError.send({ message: translations.processStartError })
     }
   }
 

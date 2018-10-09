@@ -27,13 +27,16 @@ import type {
 } from '../../../../src/libraries/mysterium-client/monitoring'
 import type { VersionCheck } from '../../../../src/libraries/mysterium-client/version-check'
 import { buildMainCommunication } from '../../../../src/app/communication/main-communication'
-import FakeMessageBus from '../../../helpers/fake-message-bus'
 import LogCache from '../../../../src/app/logging/log-cache'
 import FeatureToggle from '../../../../src/app/features/feature-toggle'
+import { buildRendererCommunication } from '../../../../src/app/communication/renderer-communication'
+import { CallbackRecorder } from '../../../helpers/utils'
+import DirectMessageBus from '../../../helpers/direct-message-bus'
 
 class InstallerMock implements Installer {
   needsInstallationMock: boolean = false
   installInvoked: boolean = false
+  installFails: boolean = false
 
   async needsInstallation (): Promise<boolean> {
     return this.needsInstallationMock
@@ -41,6 +44,9 @@ class InstallerMock implements Installer {
 
   async install (): Promise<void> {
     this.installInvoked = true
+    if (this.installFails) {
+      throw new Error('Mock install error')
+    }
   }
 }
 
@@ -102,13 +108,19 @@ describe('ProcessManager', () => {
 
   let processManager
 
+  let remoteCommunication
+
   beforeEach(() => {
     monitoring = new MonitoringMock()
     installer = new InstallerMock()
     process = new ProcessMock()
     logCache = new LogCache()
     versionCheck = new VersionCheckMock()
-    communication = buildMainCommunication(new FakeMessageBus())
+
+    const messageBus = new DirectMessageBus()
+    communication = buildMainCommunication(messageBus)
+    remoteCommunication = buildRendererCommunication(messageBus)
+
     featureToggle = new FeatureToggle({})
 
     processManager = new ProcessManager(
@@ -133,6 +145,18 @@ describe('ProcessManager', () => {
       installer.needsInstallationMock = false
       await processManager.ensureInstallation()
       expect(installer.installInvoked).to.be.false
+    })
+
+    it('sends error message to renderer when installation fails', async () => {
+      installer.needsInstallationMock = true
+      installer.installFails = true
+      const recorder = new CallbackRecorder()
+      remoteCommunication.rendererShowError.on(recorder.getCallback())
+
+      await processManager.ensureInstallation()
+
+      expect(recorder.invoked).to.be.true
+      expect(recorder.firstArgument).to.eql({ message: 'Failed to install MysteriumVPN.' })
     })
   })
 
