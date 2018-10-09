@@ -70,7 +70,10 @@ class ProcessManager {
   }
 
   async start () {
-    this._startLogging()
+    this._startLogging().catch(error => {
+      this._logError(`Starting process logging failed.`, error.message)
+      bugReporter().captureErrorException(error)
+    })
     this._startMonitoring()
     this._onProcessReady()
 
@@ -97,16 +100,40 @@ class ProcessManager {
     this._monitoring.onStatusDown(callback)
   }
 
-  _startLogging () {
-    try {
-      this._process.setupLogging()
-      this._process.onLog(processLogLevels.INFO, (data) => this._logCache.pushToLevel(processLogLevels.INFO, data))
-      this._process.onLog(processLogLevels.ERROR, (data) => this._logCache.pushToLevel(processLogLevels.ERROR, data))
-    } catch (error) {
-      this._logError(`Failing to process logs. `, error.message)
+  async _startLogging () {
+    await this._process.setupLogging()
+    this._process.onLog(processLogLevels.INFO, (data) => this._logCache.pushToLevel(processLogLevels.INFO, data))
+    this._process.onLog(processLogLevels.ERROR, (data) => this._logCache.pushToLevel(processLogLevels.ERROR, data))
+  }
 
-      bugReporter().captureErrorException(error)
-    }
+  _startMonitoring () {
+    this._monitoring.onStatusUp(() => {
+      this._logInfo(`'mysterium_client' is up`)
+
+      this._communication.healthcheckUp.send()
+
+      bugReporterMetrics().set(METRICS.CLIENT_RUNNING, true)
+    })
+
+    this._monitoring.onStatusDown(() => {
+      this._logInfo(`'mysterium_client' is down`)
+
+      this._communication.healthcheckDown.send()
+
+      bugReporterMetrics().set(METRICS.CLIENT_RUNNING, false)
+    })
+
+    this._monitoring.onStatus((status) => {
+      if (status === true) {
+        return
+      }
+
+      this._repairProcess()
+    })
+
+    this._logInfo(`Starting 'mysterium_client' monitoring`)
+
+    this._monitoring.start()
   }
 
   async _startProcess () {
@@ -161,36 +188,6 @@ class ProcessManager {
 
         this._logError(`Failed to start 'mysterium_client' process`, error)
       })
-  }
-
-  _startMonitoring () {
-    this._monitoring.onStatusUp(() => {
-      this._logInfo(`'mysterium_client' is up`)
-
-      this._communication.healthcheckUp.send()
-
-      bugReporterMetrics().set(METRICS.CLIENT_RUNNING, true)
-    })
-
-    this._monitoring.onStatusDown(() => {
-      this._logInfo(`'mysterium_client' is down`)
-
-      this._communication.healthcheckDown.send()
-
-      bugReporterMetrics().set(METRICS.CLIENT_RUNNING, false)
-    })
-
-    this._monitoring.onStatus((status) => {
-      if (status === true) {
-        return
-      }
-
-      this._repairProcess()
-    })
-
-    this._logInfo(`Starting 'mysterium_client' monitoring`)
-
-    this._monitoring.start()
   }
 
   async _repairProcess () {

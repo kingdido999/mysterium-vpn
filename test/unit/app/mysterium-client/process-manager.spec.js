@@ -53,7 +53,11 @@ class InstallerMock implements Installer {
 }
 
 class ProcessMock implements Process {
+  setupLoggingErrorMock: ?Error = null
+  startInvoked: boolean = false
+
   async start (): Promise<void> {
+    this.startInvoked = true
   }
 
   async repair (): Promise<void> {
@@ -69,6 +73,9 @@ class ProcessMock implements Process {
   }
 
   async setupLogging (): Promise<void> {
+    if (this.setupLoggingErrorMock) {
+      throw this.setupLoggingErrorMock
+    }
   }
 }
 
@@ -189,8 +196,15 @@ describe('ProcessManager', () => {
   })
 
   describe('.start', () => {
-    it('does not raise error', async () => {
+    it('starts process', async () => {
       await processManager.start()
+      expect(process.startInvoked).to.be.true
+    })
+
+    it('starts process even when logging setup fails', async () => {
+      process.setupLoggingErrorMock = new Error('mock error')
+      await processManager.start()
+      expect(process.startInvoked).to.be.true
     })
   })
 
