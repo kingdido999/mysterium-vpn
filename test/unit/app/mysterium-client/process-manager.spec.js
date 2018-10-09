@@ -34,10 +34,11 @@ import { CallbackRecorder, captureAsyncError } from '../../../helpers/utils'
 import DirectMessageBus from '../../../helpers/direct-message-bus'
 import { SUDO_PROMT_PERMISSION_DENIED }
   from '../../../../src/libraries/mysterium-client/launch-daemon/launch-daemon-installer'
+import Subscriber from '../../../../src/libraries/subscriber'
 
 class InstallerMock implements Installer {
   needsInstallationMock: boolean = false
-  installInvoked: boolean = false
+  installed: boolean = false
   installErrorMock: ?Error = null
 
   async needsInstallation (): Promise<boolean> {
@@ -45,7 +46,7 @@ class InstallerMock implements Installer {
   }
 
   async install (): Promise<void> {
-    this.installInvoked = true
+    this.installed = true
     if (this.installErrorMock) {
       throw this.installErrorMock
     }
@@ -54,10 +55,10 @@ class InstallerMock implements Installer {
 
 class ProcessMock implements Process {
   setupLoggingErrorMock: ?Error = null
-  startInvoked: boolean = false
+  started: boolean = false
 
   async start (): Promise<void> {
-    this.startInvoked = true
+    this.started = true
   }
 
   async repair (): Promise<void> {
@@ -80,7 +81,13 @@ class ProcessMock implements Process {
 }
 
 class MonitoringMock implements Monitoring {
+  _started: boolean = false
+
+  _upCallbacks: Subscriber<void> = new Subscriber()
+  _downCallbacks: Subscriber<void> = new Subscriber()
+
   start (): void {
+    this._started = true
   }
 
   stop (): void {
@@ -90,13 +97,23 @@ class MonitoringMock implements Monitoring {
   }
 
   onStatusUp (callback: EmptyCallback): void {
+    this._upCallbacks.subscribe(callback)
   }
 
   onStatusDown (callback: EmptyCallback): void {
+    this._downCallbacks.subscribe(callback)
   }
 
   isStarted (): boolean {
-    return true
+    return this._started
+  }
+
+  triggerStatusUp () {
+    this._upCallbacks.notify()
+  }
+
+  triggerStatusDown () {
+    this._downCallbacks.notify()
   }
 }
 
@@ -147,13 +164,13 @@ describe('ProcessManager', () => {
     it('installs when process needs it', async () => {
       installer.needsInstallationMock = true
       await processManager.ensureInstallation()
-      expect(installer.installInvoked).to.be.true
+      expect(installer.installed).to.be.true
     })
 
     it('does not install when process does not need it', async () => {
       installer.needsInstallationMock = false
       await processManager.ensureInstallation()
-      expect(installer.installInvoked).to.be.false
+      expect(installer.installed).to.be.false
     })
 
     describe('when installation fails', () => {
@@ -198,13 +215,41 @@ describe('ProcessManager', () => {
   describe('.start', () => {
     it('starts process', async () => {
       await processManager.start()
-      expect(process.startInvoked).to.be.true
+      expect(process.started).to.be.true
     })
 
     it('starts process even when logging setup fails', async () => {
       process.setupLoggingErrorMock = new Error('mock error')
       await processManager.start()
-      expect(process.startInvoked).to.be.true
+      expect(process.started).to.be.true
+    })
+
+    it('starts monitoring', async () => {
+      expect(monitoring.isStarted()).to.be.false
+      await processManager.start()
+      expect(monitoring.isStarted()).to.be.true
+    })
+
+    it('sends message when process goes up', async () => {
+      await processManager.start()
+
+      const recorder = new CallbackRecorder()
+      remoteCommunication.healthcheckUp.on(recorder.getCallback())
+
+      monitoring.triggerStatusUp()
+
+      expect(recorder.invoked).to.be.true
+    })
+
+    it('sends message when process goes down', async () => {
+      await processManager.start()
+
+      const recorder = new CallbackRecorder()
+      remoteCommunication.healthcheckDown.on(recorder.getCallback())
+
+      monitoring.triggerStatusDown()
+
+      expect(recorder.invoked).to.be.true
     })
   })
 
