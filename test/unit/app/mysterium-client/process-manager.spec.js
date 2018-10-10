@@ -56,12 +56,14 @@ class InstallerMock implements Installer {
 class ProcessMock implements Process {
   setupLoggingErrorMock: ?Error = null
   started: boolean = false
+  repaired: boolean = false
 
   async start (): Promise<void> {
     this.started = true
   }
 
   async repair (): Promise<void> {
+    this.repaired = true
   }
 
   async stop (): Promise<void> {
@@ -83,8 +85,9 @@ class ProcessMock implements Process {
 class MonitoringMock implements Monitoring {
   _started: boolean = false
 
-  _upCallbacks: Subscriber<void> = new Subscriber()
-  _downCallbacks: Subscriber<void> = new Subscriber()
+  _statusSubscriber: Subscriber<boolean> = new Subscriber()
+  _upSubscriber: Subscriber<void> = new Subscriber()
+  _downSubscriber: Subscriber<void> = new Subscriber()
 
   start (): void {
     this._started = true
@@ -94,26 +97,31 @@ class MonitoringMock implements Monitoring {
   }
 
   onStatus (callback: StatusCallback): void {
+    this._statusSubscriber.subscribe(callback)
   }
 
   onStatusUp (callback: EmptyCallback): void {
-    this._upCallbacks.subscribe(callback)
+    this._upSubscriber.subscribe(callback)
   }
 
   onStatusDown (callback: EmptyCallback): void {
-    this._downCallbacks.subscribe(callback)
+    this._downSubscriber.subscribe(callback)
   }
 
   isStarted (): boolean {
     return this._started
   }
 
+  triggerStatus (status: boolean) {
+    this._statusSubscriber.notify(status)
+  }
+
   triggerStatusUp () {
-    this._upCallbacks.notify()
+    this._upSubscriber.notify()
   }
 
   triggerStatusDown () {
-    this._downCallbacks.notify()
+    this._downSubscriber.notify()
   }
 }
 
@@ -250,6 +258,14 @@ describe('ProcessManager', () => {
       monitoring.triggerStatusDown()
 
       expect(recorder.invoked).to.be.true
+    })
+
+    it('repairs process each time the process is down', async () => {
+      await processManager.start()
+
+      monitoring.triggerStatus(false)
+
+      expect(process.repaired).to.be.true
     })
   })
 
